@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ship Art Generator</title>
+    <style>
+        :root {
+            --bg-color: #FFF5F5;
+            --text-color: #333;
+            --primary-color: #FF4136;
+            --secondary-color: #FF851B;
+            --accent-color: #FFDC00;
+            --card-bg: #FFFFFF;
+            --input-bg: #FFFFFF;
+            --button-bg: #FF4136;
+            --button-text: #FFFFFF;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #2C1A1D;
+            --text-color: #F5E1E4;
+            --primary-color: #FF6B6B;
+            --secondary-color: #FFA07A;
+            --accent-color: #FFD700;
+            --card-bg: #3D2529;
+            --input-bg: #4A2F33;
+            --button-bg: #FF6B6B;
+            --button-text: #2C1A1D;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .section {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--secondary-color);
+            border-radius: 5px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        #result {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .ship {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .name-entry {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .name-entry input, .name-entry select {
+            margin-right: 10px;
+        }
+
+        .gender-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .gender-Male { background-color: #4169E1; }
+        .gender-Female { background-color: #FF69B4; }
+        .gender-Non-binary { background-color: #9B59B6; }
+
+        /* Theme toggle switch */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            justify-content: flex-end;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--secondary-color);
+            color: var(--button-text);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Undo/Redo buttons */
+        .history-buttons {
+            margin-bottom: 10px;
+        }
+
+        /* Loading animation */
+        .loader {
+            border: 5px solid var(--card-bg);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .form-group { margin-bottom: 10px; }
+            input, select, textarea { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💖 Nasty Nine 🔥</h1>
+        
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" />
+                <div class="slider round"></div>
+            </label>
+            <em>Enable Dark Mode</em>
+        </div>
+
+        <div class="section">
+            <h2>Manage Lists</h2>
+            <div class="history-buttons">
+                <button id="undoBtn" onclick="undo()" disabled>Undo</button>
+                <button id="redoBtn" onclick="redo()" disabled>Redo</button>
+            </div>
+            <div class="form-group">
+                <label for="listSelect">Select List:</label>
+                <select id="listSelect"></select>
+                <button onclick="editList()" class="tooltip">Edit List
+                    <span class="tooltiptext">Modify the selected list</span>
+                </button>
+                <button onclick="deleteList()" class="tooltip">Delete List
+                    <span class="tooltiptext">Remove the selected list</span>
+                </button>
+                <button onclick="createNewList()" class="tooltip">Create New List
+                    <span class="tooltiptext">Start a new list of characters</span>
+                </button>
+            </div>
+            <div id="editListContainer" style="display: none;">
+                <h3 id="editListTitle">Edit List</h3>
+                <div class="form-group">
+                    <label for="listName">List Name:</label>
+                    <input type="text" id="listName" required>
+                </div>
+                <div id="nameEntries"></div>
+                <button onclick="addNameEntry()" class="tooltip">Add Name
+                    <span class="tooltiptext">Add a new character to the list</span>
+                </button>
+                <button onclick="saveList()" class="tooltip">Save List
+                    <span class="tooltiptext">Save changes to the list</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Generate Ships</h2>
+            <div class="form-group">
+                <label for="generatorListSelect">Select Name List:</label>
+                <select id="generatorListSelect"></select>
+            </div>
+            <div class="form-group">
+                <label for="excludedNames" class="tooltip">Exclude Names:
+                    <span class="tooltiptext">Enter names to exclude, separated by commas</span>
+                </label>
+                <input type="text" id="excludedNames" placeholder="e.g., John, Jane">
+            </div>
+            <div class="form-group">
+                <label for="pairingType" class="tooltip">Pairing Type:
+                    <span class="tooltiptext">Choose between couples or larger groups</span>
+                </label>
+                <select id="pairingType">
+                    <option value="monogamy">Monogamy</option>
+                    <option value="polygamy">Polygamy</option>
+                </select>
+            </div>
+            <div id="peopleRange">
+                <label for="minPeople" class="tooltip">Minimum number of people:
+                    <span class="tooltiptext">Set the minimum number of people in a ship</span>
+                </label>
+                <input type="number" id="minPeople" min="2" max="10" value="2">
+                <label for="maxPeople" class="tooltip">Maximum number of people:
+                    <span class="tooltiptext">Set the maximum number of people in a ship</span>
+                </label>
+                <input type="number" id="maxPeople" min="2" max="10" value="2">
+            </div>
+            <div class="form-group">
+                <label for="genderPreference" class="tooltip">Gender Preference:
+                    <span class="tooltiptext">Choose the gender combination for your ships</span>
+                </label>
+                <select id="genderPreference">
+                    <option value="yaoi">Yaoi (only males)</option>
+                    <option value="yuri">Yuri (only females)</option>
+                    <option value="nonbinary">Nonbinary Lovin (only non-binary)</option>
+                    <option value="normal">Normal (at least one male and one female)</option>
+                    <option value="random">Random (any genders)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="shipCount" class="tooltip">Number of Ships to Generate:
+                    <span class="tooltiptext">How many ships do you want to create?</span>
+                </label>
+                <input type="number" id="shipCount" min="1" max="10" value="1">
+            </div>
+            <button onclick="generateShips()" class="tooltip">Generate Ships
+                <span class="tooltiptext">Create your ships based on the selected options</span>
+            </button>
+            <button onclick="exportShips()" class="tooltip">Export Ships
+                <span class="tooltiptext">Save your generated ships as a text file</span>
+            </button>
+        </div>
+
+        <div id="result"></div>
+        <div class="loader"></div>
+    </div>
+
+    <script>
+        let nameLists = {};
+        let currentEditingList = '';
+        let history = [];
+        let historyIndex = -1;
+
+        function updateListDropdowns() {
+            const listSelect = document.getElementById('listSelect');
+            const generatorListSelect = document.getElementById('generatorListSelect');
+            listSelect.innerHTML = '';
+            generatorListSelect.innerHTML = '';
+            for (let listName in nameLists) {
+                const option1 = document.createElement('option');
+                const option2 = document.createElement('option');
+                option1.text = listName;
+                option1.value = listName;
+                option2.text = listName;
+                option2.value = listName;
+                listSelect.add(option1);
+                generatorListSelect.add(option2);
+            }
+        }
+
+        function createNewList() {
+            currentEditingList = '';
+            document.getElementById('listName').value = '';
+            document.getElementById('nameEntries').innerHTML = '';
+            document.getElementById('editListTitle').textContent = 'Create New List';
+            document.getElementById('editListContainer').style.display = 'block';
+            addNameEntry();
+        }
+
+        function editList() {
+            const listName = document.getElementById('listSelect').value;
+            if (!listName) {
+                alert('Please select a list to edit.');
+                return;
+            }
+            currentEditingList = listName;
+            document.getElementById('listName').value = listName;
+            document.getElementById('editListTitle').textContent = 'Edit List';
+            document.getElementById('editListContainer').style.display = 'block';
+            renderNameEntries(nameLists[listName]);
+        }
+
+        function deleteList() {
+            const listName = document.getElementById('listSelect').value;
+            if (!listName) {
+                alert('Please select a list to delete.');
+                return;
+            }
+            if (confirm(`Are you sure you want to delete the list "${listName}"?`)) {
+                addToHistory();
+                delete nameLists[listName];
+                updateListDropdowns();
+                document.getElementById('editListContainer').style.display = 'none';
+            }
+        }
+
+        function renderNameEntries(names) {
+            const container = document.getElementById('nameEntries');
+            container.innerHTML = '';
+            names.forEach((person, index) => {
+                addNameEntry(person.name, person.gender);
+            });
+        }
+
+        function addNameEntry(name = '', gender = 'Male') {
+            const container = document.getElementById('nameEntries');
+            const entry = document.createElement('div');
+            entry.className = 'name-entry';
+            entry.innerHTML = `
+                <input type="text" placeholder="Name" value="${name}">
+                <select>
+                    <option value="Male" ${gender === 'Male' ? 'selected' : ''}>Male</option>
+                    <option value="Female" ${gender === 'Female' ? 'selected' : ''}>Female</option>
+                    <option value="Non-binary" ${gender === 'Non-binary' ? 'selected' : ''}>Non-binary</option>
+                </select>
+                <button onclick="this.parentElement.remove()">-</button>`;
+            container.appendChild(entry);
+        }
+
+        function saveList() {
+            const listName = document.getElementById('listName').value;
+            if (!listName) {
+                alert('Please enter a list name.');
+                return;
+            }
+            const entries = document.querySelectorAll('.name-entry');
+            const names = Array.from(entries).map(entry => ({
+                name: entry.querySelector('input').value,
+                gender: entry.querySelector('select').value
+            })).filter(person => person.name);
+
+            if (names.length === 0) {
+                alert('Please add at least one name to the list.');
+                return;
+            }
+
+            addToHistory();
+            nameLists[listName] = names;
+            updateListDropdowns();
+            document.getElementById('editListContainer').style.display = 'none';
+            alert(`List "${listName}" has been saved.`);
+        }
+
+        function generateShip(availableNames, pairingType, minPeople, maxPeople, genderPreference) {
+            let selectedNames = [];
+
+            const filterByGender = (names, genders) => {
+                return names.filter(person => genders.includes(person.gender));
+            };
+
+            switch (genderPreference) {
+                case 'yaoi':
+                    availableNames = filterByGender(availableNames, ['Male']);
+                    break;
+                case 'yuri':
+                    availableNames = filterByGender(availableNames, ['Female']);
+                    break;
+                case 'nonbinary':
+                    availableNames = filterByGender(availableNames, ['Non-binary']);
+                    break;
+                case 'normal':
+                    const males = filterByGender(availableNames, ['Male']);
+                    const females = filterByGender(availableNames, ['Female']);
+                    if (males.length > 0 && females.length > 0) {
+                        selectedNames.push(males[Math.floor(Math.random() * males.length)]);
+                        selectedNames.push(females[Math.floor(Math.random() * females.length)]);
+                        availableNames = availableNames.filter(n => !selectedNames.includes(n));
+                    } else {
+                        return 'Not enough male and female names for a "normal" pairing!';
+                    }
+                    break;
+            }
+
+            if (availableNames.length === 0) {
+                return 'No names available with the selected gender preference!';
+            }
+
+            let numberOfPeople = pairingType === 'monogamy' ? 2 : 
+                Math.floor(Math.random() * (maxPeople - minPeople + 1)) + minPeople;
+
+            while (selectedNames.length < numberOfPeople && availableNames.length > 0) {
+                const index = Math.floor(Math.random() * availableNames.length);
+                selectedNames.push(availableNames[index]);
+                availableNames.splice(index, 1);
+            }
+
+            return selectedNames.map(person => person.name).join(' + ');
+        }
+
+        function generateShips() {
+            const selectedList = document.getElementById('generatorListSelect').value;
+            const pairingType = document.getElementById('pairingType').value;
+            const genderPreference = document.getElementById('genderPreference').value;
+            const minPeople = parseInt(document.getElementById('minPeople').value);
+            const maxPeople = parseInt(document.getElementById('maxPeople').value);
+            const shipCount = parseInt(document.getElementById('shipCount').value);
+            const excludedNames = document.getElementById('excludedNames').value.split(',').map(name => name.trim());
+            
+            if (!nameLists[selectedList]) {
+                alert('Please select a name list first!');
+                return;
+            }
+
+            showLoader();
+
+            setTimeout(() => {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '<h3>Generated Ships:</h3>';
+
+                for (let i = 0; i < shipCount; i++) {
+                    let availableNames = nameLists[selectedList].filter(person => !excludedNames.includes(person.name));
+                    const ship = generateShip(availableNames, pairingType, minPeople, maxPeople, genderPreference);
+                    resultDiv.innerHTML += `<div class="ship">${ship}</div>`;
+                }
+
+                hideLoader();
+            }, 500); // Simulating a delay for the loading animation
+        }
+
+        function exportShips() {
+            const ships = Array.from(document.querySelectorAll('.ship')).map(ship => ship.textContent);
+            if (ships.length === 0) {
+                alert('No ships to export. Please generate ships first.');
+                return;
+            }
+
+            const content = ships.join('\n');
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'generated_ships.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function addToHistory() {
+            history = history.slice(0, historyIndex + 1);
+            history.push(JSON.parse(JSON.stringify(nameLists)));
+            historyIndex++;
+            updateHistoryButtons();
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                nameLists = JSON.parse(JSON.stringify(history[historyIndex]));
+                updateListDropdowns();
+                updateHistoryButtons();
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                nameLists = JSON.parse(JSON.stringify(history[historyIndex]));
+                updateListDropdowns();
+                updateHistoryButtons();
+            }
+        }
+
+        function updateHistoryButtons() {
+            document.getElementById('undoBtn').disabled = historyIndex <= 0;
+            document.getElementById('redoBtn').disabled = historyIndex >= history.length - 1;
+        }
+
+        function showLoader() {
+            document.querySelector('.loader').style.display = 'block';
+        }
+
+        function hideLoader() {
+            document.querySelector('.loader').style.display = 'none';
+        }
+
+        // Initialize min and max people inputs
+        document.getElementById('pairingType').addEventListener('change', function() {
+            const peopleRange = document.getElementById('peopleRange');
+            const minPeople = document.getElementById('minPeople');
+            const maxPeople = document.getElementById('maxPeople');
+
+            if (this.value === 'monogamy') {
+                peopleRange.style.display = 'none';
+                minPeople.value = 2;
+                maxPeople.value = 2;
+            } else {
+                peopleRange.style.display = 'block';
+                minPeople.value = 2;
+                maxPeople.value = 10;
+            }
+        });
+
+        // Ensure max is always >= min
+        document.getElementById('minPeople').addEventListener('change', function() {
+            const maxPeople = document.getElementById('maxPeople');
+            if (parseInt(this.value) > parseInt(maxPeople.value)) {
+                maxPeople.value = this.value;
+            }
+        });
+
+        document.getElementById('maxPeople').addEventListener('change', function() {
+            const minPeople = document.getElementById('minPeople');
+            if (parseInt(this.value) < parseInt(minPeople.value)) {
+                minPeople.value = this.value;
+            }
+        });
+
+        // Theme switching
+        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+
+        function switchTheme(e) {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }    
+        }
+
+        toggleSwitch.addEventListener('change', switchTheme, false);
+
+        // Initialize the page
+        updateListDropdowns();
+        updateHistoryButtons();
+    </script>
+</body>
+</html>
