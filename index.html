@@ -99,6 +99,7 @@
 
         .ship {
             background-color: transparent;
+            border: 1px solid var(--secondary-color);
             color: var(--text-color);
             padding: 10px;
             margin-bottom: 10px;
@@ -127,7 +128,6 @@
         .gender-Female { background-color: #FF69B4; }
         .gender-Non-binary { background-color: #9B59B6; }
 
-        /* Theme toggle switch */
         .theme-switch-wrapper {
             display: flex;
             align-items: center;
@@ -178,7 +178,6 @@
             transform: translateX(26px);
         }
 
-        /* Tooltip styles */
         .tooltip {
             position: relative;
             display: inline-block;
@@ -207,12 +206,10 @@
             opacity: 1;
         }
 
-        /* Undo/Redo buttons */
         .history-buttons {
             margin-bottom: 10px;
         }
 
-        /* Loading animation */
         .loader {
             border: 5px solid var(--card-bg);
             border-top: 5px solid var(--primary-color);
@@ -229,7 +226,21 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Mobile responsiveness */
+        .checkbox-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--secondary-color);
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .checkbox-item {
+            display: block;
+            margin-bottom: 5px;
+        }
+        #selectAllCheck {
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 600px) {
             .container { padding: 10px; }
             .form-group { margin-bottom: 10px; }
@@ -239,7 +250,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>💖 Nasty Nine 🔥</h1>
+        <h1>💖 Ship Art Generator 🔥</h1>
         
         <div class="theme-switch-wrapper">
             <label class="theme-switch" for="checkbox">
@@ -287,14 +298,22 @@
         <div class="section">
             <h2>Generate Ships</h2>
             <div class="form-group">
-                <label for="generatorListSelect">Select Name List:</label>
-                <select id="generatorListSelect"></select>
+                <label for="generatorListSelect" class="tooltip">Select Name List:
+                    <span class="tooltiptext">Choose a list or select "Crack ship!" for all lists combined</span>
+                </label>
+                <select id="generatorListSelect">
+                    <option value="all">Crack ship!</option>
+                </select>
             </div>
             <div class="form-group">
-                <label for="excludedNames" class="tooltip">Exclude Names:
-                    <span class="tooltiptext">Enter names to exclude, separated by commas</span>
+                <label class="tooltip">Include Names:
+                    <span class="tooltiptext">Select names to include in ship generation</span>
                 </label>
-                <input type="text" id="excludedNames" placeholder="e.g., John, Jane">
+                <input type="checkbox" id="selectAllCheck" checked>
+                <label for="selectAllCheck">Select All</label>
+                <div id="nameCheckboxes" class="checkbox-list">
+                    <!-- Checkboxes will be populated by JavaScript -->
+                </div>
             </div>
             <div class="form-group">
                 <label for="pairingType" class="tooltip">Pairing Type:
@@ -346,7 +365,61 @@
     </div>
 
     <script>
-        let nameLists = {};
+        let nameLists = {
+            "Freak of Strahd": [
+                {name: "Yaya", gender: "Female"},
+                {name: "Doe", gender: "Female"},
+                {name: "Jotchie", gender: "Male"},
+                {name: "Gwen", gender: "Female"},
+                {name: "Ornella", gender: "Female"},
+                {name: "Sylvie", gender: "Female"},
+                {name: "Nacho", gender: "Male"},
+                {name: "Strahd", gender: "Male"},
+                {name: "Ismark", gender: "Male"},
+                {name: "Irena", gender: "Female"},
+                {name: "Bildrath", gender: "Male"},
+                {name: "Parrywimple", gender: "Male"},
+                {name: "Father Donovich", gender: "Male"},
+                {name: "Doru", gender: "Male"},
+                {name: "Urwin", gender: "Male"},
+                {name: "Dankia", gender: "Female"},
+                {name: "Nikolai", gender: "Male"},
+                {name: "Karl", gender: "Male"},
+                {name: "Rictavio", gender: "Male"},
+                {name: "Vargas", gender: "Male"},
+                {name: "Lydia", gender: "Female"},
+                {name: "Izek", gender: "Male"},
+                {name: "Lady Wachter", gender: "Female"},
+                {name: "Blinsky", gender: "Male"},
+                {name: "Henrik", gender: "Male"},
+                {name: "Kasamier", gender: "Male"},
+                {name: "Kasamier's Guards", gender: "Male"},
+                {name: "Violenta", gender: "Female"},
+                {name: "Ester", gender: "Male"}
+            ],
+            "Grim City": [
+                {name: "Bea", gender: "Female"},
+                {name: "Chico", gender: "Male"},
+                {name: "Mori", gender: "Female"},
+                {name: "Johnny", gender: "Male"},
+                {name: "Sally", gender: "Female"},
+                {name: "Benita", gender: "Female"},
+                {name: "Twitch", gender: "Male"},
+                {name: "Santos", gender: "Male"},
+                {name: "Lola", gender: "Female"},
+                {name: "Lillith", gender: "Female"},
+                {name: "Napoleon", gender: "Male"},
+                {name: "Gwen", gender: "Female"},
+                {name: "Alex", gender: "Male"},
+                {name: "Big Tex", gender: "Male"},
+                {name: "Spencer", gender: "Male"},
+                {name: "Jimmy", gender: "Male"},
+                {name: "Aura", gender: "Female"},
+                {name: "Eddie", gender: "Male"},
+                {name: "Danny", gender: "Male"},
+                {name: "Tyler", gender: "Male"}
+            ]
+        };
         let currentEditingList = '';
         let history = [];
         let historyIndex = -1;
@@ -355,7 +428,7 @@
             const listSelect = document.getElementById('listSelect');
             const generatorListSelect = document.getElementById('generatorListSelect');
             listSelect.innerHTML = '';
-            generatorListSelect.innerHTML = '';
+            generatorListSelect.innerHTML = '<option value="all">Crack ship!</option>';
             for (let listName in nameLists) {
                 const option1 = document.createElement('option');
                 const option2 = document.createElement('option');
@@ -366,7 +439,40 @@
                 listSelect.add(option1);
                 generatorListSelect.add(option2);
             }
+            updateNameCheckboxes();
         }
+
+        function updateNameCheckboxes() {
+            const selectedList = document.getElementById('generatorListSelect').value;
+            const checkboxContainer = document.getElementById('nameCheckboxes');
+            checkboxContainer.innerHTML = '';
+            
+            let names = [];
+            if (selectedList === 'all') {
+                for (let list in nameLists) {
+                    names = names.concat(nameLists[list]);
+                }
+            } else {
+                names = nameLists[selectedList] || [];
+            }
+            
+            names.forEach(person => {
+                const checkbox = document.createElement('label');
+                checkbox.className = 'checkbox-item';
+                checkbox.innerHTML = `
+                    <input type="checkbox" name="includedNames" value="${person.name}" checked>
+                    ${person.name} (${person.gender})
+                `;
+                checkboxContainer.appendChild(checkbox);
+            });
+        }
+
+        document.getElementById('generatorListSelect').addEventListener('change', updateNameCheckboxes);
+
+        document.getElementById('selectAllCheck').addEventListener('change', function() {
+            const checkboxes = document.getElementsByName('includedNames');
+            checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+        });
 
         function createNewList() {
             currentEditingList = '';
@@ -423,7 +529,8 @@
                     <option value="Female" ${gender === 'Female' ? 'selected' : ''}>Female</option>
                     <option value="Non-binary" ${gender === 'Non-binary' ? 'selected' : ''}>Non-binary</option>
                 </select>
-                <button onclick="this.parentElement.remove()">-</button>`;
+                <button onclick="this.parentElement.remove()">-</button>
+            `;
             container.appendChild(entry);
         }
 
@@ -504,10 +611,23 @@
             const minPeople = parseInt(document.getElementById('minPeople').value);
             const maxPeople = parseInt(document.getElementById('maxPeople').value);
             const shipCount = parseInt(document.getElementById('shipCount').value);
-            const excludedNames = document.getElementById('excludedNames').value.split(',').map(name => name.trim());
+            const includedNames = Array.from(document.getElementsByName('includedNames'))
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
             
-            if (!nameLists[selectedList]) {
-                alert('Please select a name list first!');
+            let availableNames = [];
+            if (selectedList === 'all') {
+                for (let list in nameLists) {
+                    availableNames = availableNames.concat(nameLists[list]);
+                }
+            } else {
+                availableNames = nameLists[selectedList] || [];
+            }
+            
+            availableNames = availableNames.filter(person => includedNames.includes(person.name));
+
+            if (availableNames.length === 0) {
+                alert('No names available with the current selection!');
                 return;
             }
 
@@ -518,13 +638,12 @@
                 resultDiv.innerHTML = '<h3>Generated Ships:</h3>';
 
                 for (let i = 0; i < shipCount; i++) {
-                    let availableNames = nameLists[selectedList].filter(person => !excludedNames.includes(person.name));
                     const ship = generateShip(availableNames, pairingType, minPeople, maxPeople, genderPreference);
                     resultDiv.innerHTML += `<div class="ship">${ship}</div>`;
                 }
 
                 hideLoader();
-            }, 500); // Simulating a delay for the loading animation
+            }, 500);
         }
 
         function exportShips() {
